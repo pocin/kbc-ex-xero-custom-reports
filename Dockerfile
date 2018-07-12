@@ -11,4 +11,5 @@ RUN apt-get update && \
 RUN pip3 install selenium requests pandas openpyxl xlrd
 
 WORKDIR /code/
+COPY . /code/
 CMD python3 -u /code/main.py
