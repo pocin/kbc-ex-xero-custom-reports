@@ -142,7 +142,15 @@ def convert_excel(excel_dir, path_out):
             "be in tmp folder!, there are {}".format(excels))
     for excel in excels:
         print("converting {} into {}".format(excel, path_out))
-        pd.read_excel(excel).to_csv(path_out, index=False, sep=u"\u0001")
+        pd.read_excel(excel).to_csv(path_out, index=False)
+        print("creating manifest")
+        manifest_path = str(path_out) + '.manifest'
+        with open(manifest_path, 'w') as f:
+            mani = {
+                "columns": ["data"],
+                "delimiter": u"\u0001"
+            }
+            json.dump(mani, f)
         # clean up!
         excel.unlink()
 

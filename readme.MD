@@ -26,4 +26,4 @@ to download reports
 }
 ```
 
-Excels are converted to csv with `\u0001` [delimiter](https://www.fileformat.info/info/unicode/char/0001/index.htm)  
+Excels are converted to csv and uploaded to keboola with with [\u0001](https://www.fileformat.info/info/unicode/char/0001/index.htm) delimiter so that all columns are squashed into one called "data"
