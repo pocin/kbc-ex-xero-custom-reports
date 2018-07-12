@@ -27,3 +27,6 @@ to download reports
 ```
 
 Excels are converted to csv and uploaded to keboola with with [\u0001](https://www.fileformat.info/info/unicode/char/0001/index.htm) delimiter so that all columns are squashed into one called "data"
+
+# License
+This project is licensed under [GLWTPL](https://github.com/me-shaon/GLWTPL/blob/master/LICENSE) License
