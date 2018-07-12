@@ -3,6 +3,7 @@ import traceback
 import sys
 import pandas as pd
 from pathlib import Path
+import csv
 import time
 import requests
 import os
@@ -134,6 +135,13 @@ class WebDriver:
 def glob_excels(excel_dir):
     return list(Path(excel_dir).glob("*.xls*"))
 
+def clean_newlines(value):
+    if isinstance(value, str):
+        return value.replace(u"\n", " ")
+    else:
+        return value
+
+
 def convert_excel(excel_dir, path_out):
     excels = glob_excels(excel_dir)
     if len(excels) != 1:
@@ -142,7 +150,11 @@ def convert_excel(excel_dir, path_out):
             "be in tmp folder!, there are {}".format(excels))
     for excel in excels:
         print("converting {} into {}".format(excel, path_out))
-        pd.read_excel(excel).to_csv(path_out, index=False)
+        # saving to csc doesn't escape newlines correctly
+        # soo we clean them manually
+        report = (pd.read_excel(excel)
+                  .applymap(clean_newlines).
+                  to_csv(path_out, index=False))
         print("creating manifest")
         manifest_path = str(path_out) + '.manifest'
         with open(manifest_path, 'w') as f:
