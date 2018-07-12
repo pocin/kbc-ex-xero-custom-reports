@@ -5,7 +5,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     curl https://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip -o ~/chromedriver.zip && \
     python3 -m zipfile -e ~/chromedriver.zip /usr/local/bin/ && \
-    chmod u+x /usr/local/bin/chromedriver && \
+    chmod a+x /usr/local/bin/chromedriver && \
     rm ~/chromedriver.zip
 
 RUN pip3 install selenium requests pandas openpyxl xlrd
