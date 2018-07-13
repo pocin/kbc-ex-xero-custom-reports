@@ -153,16 +153,11 @@ def convert_excel(excel_dir, path_out):
         # saving to csc doesn't escape newlines correctly
         # soo we clean them manually
         report = (pd.read_excel(excel)
-                  .applymap(clean_newlines).
-                  to_csv(path_out, index=False))
-        print("creating manifest")
-        manifest_path = str(path_out) + '.manifest'
-        with open(manifest_path, 'w') as f:
-            mani = {
-                "columns": ["data"],
-                "delimiter": u"\u0001"
-            }
-            json.dump(mani, f)
+                  .applymap(clean_newlines)
+                  )
+        report.index.name = 'row_number'
+        report.to_csv(path_out)
+
         # clean up!
         excel.unlink()
 
