@@ -24,8 +24,6 @@ class WebDriver:
         self.download_dir = download_dir
         self.options = webdriver.ChromeOptions()
 
-        self._account_id = None
-
         self.options.add_argument('--disable-extensions')
 
         if headless:
@@ -89,35 +87,29 @@ class WebDriver:
         # assert we are logged in
         # TODO
 
-    def list_reports(self):
+    def list_reports(self, account_id):
         self.driver.get(
             "https://reporting.xero.com/{}/v2/ReportList/CustomReports?".format(
-            self.account_id))
+            account_id))
         # it's a json returned in html
         js = json.loads(self.driver.find_element_by_tag_name('pre').text)
         return {r["id"]: r["name"] for r in js['reports']}
         # print report ids and names here?
 
-    @property
-    def account_id(self):
-        self.driver.get("https://reporting.xero.com/custom-reports")
-        if self._account_id is not None:
-            return self._account_id
-        else:
-            try:
-                # visiting this redirects to
-                # "https://reporting.xero.com/!abcde/custom-reports" where  !abcde is the account id
-                self._account_id = re.search(r"(?!=.com/)!.*(?=/)", self.driver.current_url).group()
-                return self._account_id
-            except AttributeError:
-                raise ValueError("Couldn't find account_id in {}".format(self.driver.current_url))
 
-    def download_report(self, report_id):
+    @staticmethod
+    def account_id_from_url(url):
+        try:
+            return re.search(r"(?!=.com/)!\w+", url).group()
+        except AttributeError:
+            raise ValueError("Couldn't find account_id in {}".format(url))
+
+    def download_report(self, report_id, account_id):
         # the first string after xero.com/ is the account id
         report_download_template = (
             "https://reporting.xero.com/"
             "{account_id}/v1/Run/"
-            "{report_id}?isCustom=True").format(account_id=self.account_id, report_id=report_id)
+            "{report_id}?isCustom=True").format(account_id=account_id, report_id=report_id)
 
         print("getting report from ", report_download_template)
         self.driver.get(report_download_template)
@@ -168,18 +160,19 @@ def main(params, datadir='/data/'):
 
     wd = WebDriver(headless=True, download_dir=download_dir)
     action = params['action']
+    account_id = params['account_id']
     if action == 'list_reports':
         print("Listing available reports")
         with wd:
             wd.login(params['username'], params['#password'])
-            reports = wd.list_reports()
+            reports = wd.list_reports(account_id)
             print(json.dumps(reports, indent=2))
     elif action == 'download_reports':
         print("downloading reports")
         with wd:
             wd.login(params['username'], params['#password'])
             for report in params['reports']:
-                wd.download_report(report['report_id'])
+                wd.download_report(report['report_id'], account_id=account_id)
                 outname = str(Path(report['filename']).stem) + '.csv'
                 convert_excel(download_dir, outdir / outname)
     else:
