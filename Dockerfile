@@ -8,7 +8,13 @@ RUN apt-get update && \
     chmod a+x /usr/local/bin/chromedriver && \
     rm ~/chromedriver.zip
 
-RUN pip3 install selenium requests pandas openpyxl xlrd
+RUN pip3 install --upgrade --no-cache-dir \
+    selenium~=3.0 \
+    requests~=2.19.0 \
+    pandas~=0.23.0 \
+    openpyxl~=2.5.0 \
+    xlrd \
+    maya
 
 WORKDIR /code/
 COPY . /code/

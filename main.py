@@ -7,9 +7,15 @@ import csv
 import time
 import requests
 import os
+from typing import Callable, Any, Union, Iterable
+import maya
 import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+
+class AuthenticationError(ValueError):
+    pass
+
 
 class WebDriver:
     # most credits go here
@@ -84,8 +90,13 @@ class WebDriver:
         pass_field.clear()
         pass_field.send_keys(password)
         pass_field.send_keys(Keys.RETURN)
-        # assert we are logged in
-        # TODO
+        time.sleep(2)
+
+        title = self.driver.title
+        if "Xero | Dashboard" not in title:
+            raise AuthenticationError(
+                "Probably didn't authenticate sucesfully. The title says {}"
+                .format(title))
 
     def list_reports(self, account_id):
         self.driver.get(
@@ -96,7 +107,6 @@ class WebDriver:
         return {r["id"]: r["name"] for r in js['reports']}
         # print report ids and names here?
 
-
     @staticmethod
     def account_id_from_url(url):
         try:
@@ -104,25 +114,74 @@ class WebDriver:
         except AttributeError:
             raise ValueError("Couldn't find account_id in {}".format(url))
 
-    def download_report(self, report_id, account_id):
+    def download_report(
+            self,
+            report_id,
+            account_id,
+            from_date=None,
+            to_date=None):
+        """
+
+        Args:
+            update_date_range: is an optional function taking an argument (self)
+                and performing the click action of updating a date range
+        """
+
         # the first string after xero.com/ is the account id
         report_download_template = (
             "https://reporting.xero.com/"
             "{account_id}/v1/Run/"
             "{report_id}?isCustom=True").format(account_id=account_id, report_id=report_id)
 
-        print("getting report from ", report_download_template)
+        print("getting report from ", report_download_template,
+              "from_date", from_date,
+              "to_date", to_date)
         self.driver.get(report_download_template)
         self.enable_download_in_headless_chrome()
+        self.update_date_range(from_date, to_date)
+
+        # click export btn so that excel btn is rendered
         export_btn = self.driver.find_element_by_class_name("export-button")
         export_btn.click()
-        excel_btn = [l for l in self.driver.find_elements_by_class_name("x-menu-item-link") if l.text == 'Excel'][0]
+        excel_btn = [l
+                     for l
+                     in self.driver.find_elements_by_class_name("x-menu-item-link")
+                     if l.text == 'Excel'][0]
         excel_btn.click()
         # the sleeps are experimental and it might happen that the file won't be downloaded
         time.sleep(5)
 
         print("Report downloaded to ", glob_excels(self.download_dir))
 
+    def update_date_range(self, from_time: Union[str, None], until_time: Union[str, None]):
+        # update From field
+        if from_time:
+            from_input_field = self.driver.find_element_by_id("dateFieldFrom-inputEl")
+            time.sleep(1)
+            from_input_field.send_keys(
+                Keys.BACKSPACE * len(from_input_field.get_attribute("value")))
+
+            from_input_field.send_keys(from_time)
+            # press the update button
+
+        if until_time:
+            # update To field
+            until_input_field = self.driver.find_element_by_id("dateFieldTo-inputEl")
+            time.sleep(1)
+            # clear the input field
+            until_input_field.send_keys(
+                Keys.BACKSPACE * len(until_input_field.get_attribute("value")))
+
+            # input the datetime
+            until_input_field.send_keys(until_time)
+
+            # take the first div that satisfies the condition
+            update_btn = next(filter(
+                lambda div: div.get_attribute("data-automationid") == "date-toolbar-update-button",
+                self.driver.find_elements_by_tag_name("div")))
+            update_btn.click()
+            time.sleep(7)
+            # wait 5 seconds to the report is, hopefully, updated
 
 def glob_excels(excel_dir):
     return list(Path(excel_dir).glob("*.xls*"))
@@ -172,13 +231,25 @@ def main(params, datadir='/data/'):
         with wd:
             wd.login(params['username'], params['#password'])
             for report in params['reports']:
-                wd.download_report(report['report_id'], account_id=account_id)
+                print("Downloading report", report)
+                from_date = robotize_date(report.get("from_date", None))
+                to_date = robotize_date(report.get("to_date", None))
+                wd.download_report(report['report_id'],
+                                   account_id=account_id,
+                                   from_date=from_date,
+                                   to_date=to_date)
                 outname = str(Path(report['filename']).stem) + '.csv'
                 convert_excel(download_dir, outdir / outname)
     else:
         raise ValueError("unknown action, '{}'".format(action))
 
 
+def robotize_date(dt_str):
+    if dt_str is None:
+        return
+    converted = maya.when(dt_str).datetime().strftime("%d %b %Y")
+    print("converted", dt_str, "to", converted)
+    return converted
 
 if __name__ == "__main__":
     with open("/data/config.json") as f:
