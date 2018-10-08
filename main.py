@@ -139,6 +139,7 @@ class WebDriver:
         # click export btn so that excel btn is rendered
         export_btn = self._locate_export_button()
         export_btn.click()
+        time.sleep(1)
 
         excel_btn = self._locate_export_to_excel_button()
         excel_btn.click()
@@ -152,7 +153,7 @@ class WebDriver:
             if btn.get_attribute('data-automationid') == 'report-toolbar-export-button':
                 return btn
         raise KeyError("Couldn't find export menu. "
-                       "The underlying html/css probably changed and needs to code needs to be adjusted")
+                       "The underlying html/css probably changed and the code needs to be adjusted")
     def _locate_export_to_excel_button(self):
         for btn in self.driver.find_elements_by_tag_name('button'):
             if btn.get_attribute('data-automationid') == 'report-toolbar-export-excel-menuitem--body':
