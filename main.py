@@ -242,10 +242,16 @@ def main(params, datadir='/data/'):
                 print("Downloading report", report)
                 from_date = robotize_date(report.get("from_date", None))
                 to_date = robotize_date(report.get("to_date", None))
-                wd.download_report(report['report_id'],
-                                   account_id=account_id,
-                                   from_date=from_date,
-                                   to_date=to_date)
+                try:
+                    wd.download_report(report['report_id'],
+                                       account_id=account_id,
+                                       from_date=from_date,
+                                       to_date=to_date)
+                except Exception:
+                    sc_path = '/tmp/xero_custom_report_latest_exception.png'
+                    print("Saved screenshot to", sc_path)
+                    wd.driver.save_screenshot(sc_path)
+                    raise
                 outname = str(Path(report['filename']).stem) + '.csv'
                 convert_excel(download_dir, outdir / outname)
     else:
