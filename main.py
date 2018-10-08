@@ -95,8 +95,8 @@ class WebDriver:
         title = self.driver.title
         if "Xero | Dashboard" not in title:
             raise AuthenticationError(
-                "Probably didn't authenticate sucesfully. The title says {}"
-                .format(title))
+                ("Probably didn't authenticate sucesfully. "
+                 "The title says {}. Check your advertiser ID!").format(title))
 
     def list_reports(self, account_id):
         self.driver.get(
@@ -121,10 +121,6 @@ class WebDriver:
             from_date=None,
             to_date=None):
         """
-
-        Args:
-            update_date_range: is an optional function taking an argument (self)
-                and performing the click action of updating a date range
         """
 
         # the first string after xero.com/ is the account id
@@ -141,17 +137,29 @@ class WebDriver:
         self.update_date_range(from_date, to_date)
 
         # click export btn so that excel btn is rendered
-        export_btn = self.driver.find_element_by_class_name("export-button")
+        export_btn = self._locate_export_button()
         export_btn.click()
-        excel_btn = [l
-                     for l
-                     in self.driver.find_elements_by_class_name("x-menu-item-link")
-                     if l.text == 'Excel'][0]
+
+        excel_btn = self._locate_export_to_excel_button()
         excel_btn.click()
         # the sleeps are experimental and it might happen that the file won't be downloaded
         time.sleep(5)
 
         print("Report downloaded to ", glob_excels(self.download_dir))
+
+    def _locate_export_button(self):
+        for btn in  self.driver.find_elements_by_tag_name('button'):
+            if btn.get_attribute('data-automationid') == 'report-toolbar-export-button':
+                return btn
+        raise KeyError("Couldn't find export menu. "
+                       "The underlying html/css probably changed and needs to code needs to be adjusted")
+    def _locate_export_to_excel_button(self):
+        for btn in self.driver.find_elements_by_tag_name('button'):
+            if btn.get_attribute('data-automationid') == 'report-toolbar-export-excel-menuitem--body':
+                return btn
+
+        raise KeyError("Couldn't find export button. "
+                       "The underlying html/css probably changed and the code needs to be adjusted")
 
     def update_date_range(self, from_time: Union[str, None], until_time: Union[str, None]):
         # update From field
