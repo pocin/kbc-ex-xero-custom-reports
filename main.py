@@ -119,8 +119,7 @@ class WebDriver:
             report_id,
             account_id,
             from_date=None,
-            to_date=None,
-            wait_for_download=10):
+            to_date=None):
         """
         """
 
@@ -145,9 +144,15 @@ class WebDriver:
         excel_btn = self._locate_export_to_excel_button()
         excel_btn.click()
         # the sleeps are experimental and it might happen that the file won't be downloaded
-        time.sleep(wait_for_download)
-
-        print("Report downloaded to ", glob_excels(self.download_dir))
+        time.sleep(3)
+        while True:
+            report_path = glob_excels(self.download_dir)
+            if not report_path:
+                print("Waiting for the report to be downloaded")
+                time.sleep(3)
+            else:
+                print("Report downloaded to ", report_path)
+                break
 
     def _locate_export_button(self):
         for btn in  self.driver.find_elements_by_tag_name('button'):
@@ -248,8 +253,7 @@ def main(params, datadir='/data/'):
                     wd.download_report(report['report_id'],
                                        account_id=account_id,
                                        from_date=from_date,
-                                       to_date=to_date,
-                                       wait_for_download=report.get('download_timeout', 10))
+                                       to_date=to_date)
                 except Exception:
                     sc_path = '/tmp/xero_custom_report_latest_exception.png'
                     print("Saved screenshot to", sc_path)
