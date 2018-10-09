@@ -25,6 +25,7 @@ to download reports
       "filename":  "friendly_name_less_than_64_chars",
       "from_date": "last month",
       "to_date": "today",
+      "download_timeout": 10 # optional, default to 10 seconds. How long to wait after clicking download button
     }
   ]
 }
