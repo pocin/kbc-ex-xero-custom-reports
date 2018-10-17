@@ -92,12 +92,6 @@ class WebDriver:
         pass_field.send_keys(Keys.RETURN)
         time.sleep(2)
 
-        title = self.driver.title
-        if "Xero | Dashboard" not in title:
-            raise AuthenticationError(
-                ("Probably didn't authenticate sucesfully. "
-                 "The title says {}. Check your advertiser ID!").format(title))
-
     def list_reports(self, account_id):
         self.driver.get(
             "https://reporting.xero.com/{}/v2/ReportList/CustomReports?".format(
