@@ -96,7 +96,7 @@ class WebDriver:
         if "Xero | Dashboard" not in title:
             raise AuthenticationError(
                 ("Probably didn't authenticate sucesfully. "
-                 "The title says {}. Check your advertiser ID!").format(title))
+                 "The title says '{}'. Check your credentials and account_id!").format(title))
 
     def list_reports(self, account_id):
         self.driver.get(
