@@ -268,7 +268,7 @@ def main(params, datadir='/data/'):
 def robotize_date(dt_str):
     if dt_str is None:
         return
-    converted = maya.when(dt_str).datetime().strftime("%d %b %Y")
+    converted = maya.when(dt_str).datetime().strftime("%-d %b %Y")
     print("converted", dt_str, "to", converted)
     return converted
 
