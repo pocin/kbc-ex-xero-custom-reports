@@ -54,6 +54,13 @@ if you omit the date range, the default value (defined in the UI) will be used
 
 The value can be either a human readable string or a string in format `23 Jun 2018`
 
+The human readable strings can be 
+- `beginning of previous month`
+- `beginning of previous month - 2 months` (to look 3 months back)
+- `end of previous month` (to look 3 months back)
+
+Always check the logs to make sure the date is converted as expected
+
 ## Account id
 Get account_id by logging in to the UI, clicking reports and copying it from the url
 

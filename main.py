@@ -8,7 +8,8 @@ import time
 import requests
 import os
 from typing import Callable, Any, Union, Iterable
-import maya
+import parsedatetime
+import datetime
 import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -268,7 +269,11 @@ def main(params, datadir='/data/'):
 def robotize_date(dt_str):
     if dt_str is None:
         return
-    converted = maya.when(dt_str).datetime().strftime("%-d %b %Y")
+    cal = parsedatetime.Calendar()
+    t_struct, status = cal.parse(dt_str)
+    if status != 1:
+        raise ValueError("Couldn't convert '{}' to a datetime".format(dt_str))
+    converted = datetime.datetime(*t_struct[:6]).strftime("%-d %b %Y")
     print("converted", dt_str, "to", converted)
     return converted
 

@@ -13,8 +13,8 @@ RUN pip3 install --upgrade --no-cache-dir \
     requests~=2.19.0 \
     pandas~=0.23.0 \
     openpyxl~=2.5.0 \
+    parsedatetime \
     xlrd \
-    maya
 
 WORKDIR /code/
 COPY . /code/
