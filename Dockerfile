@@ -14,7 +14,7 @@ RUN pip3 install --upgrade --no-cache-dir \
     pandas~=0.23.0 \
     openpyxl~=2.5.0 \
     parsedatetime \
-    xlrd \
+    xlrd
 
 WORKDIR /code/
 COPY . /code/
