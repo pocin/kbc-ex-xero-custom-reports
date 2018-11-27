@@ -13,10 +13,11 @@ import datetime
 import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 class AuthenticationError(ValueError):
     pass
-
 
 class WebDriver:
     # most credits go here
@@ -156,14 +157,18 @@ class WebDriver:
                 break
 
     def _locate_export_button(self):
+        print("Looking for export button")
         for btn in  self.driver.find_elements_by_tag_name('button'):
             if btn.get_attribute('data-automationid') == 'report-toolbar-export-button':
+                print("Found")
                 return btn
         raise KeyError("Couldn't find export menu. "
                        "The underlying html/css probably changed and the code needs to be adjusted")
     def _locate_export_to_excel_button(self):
+        print("Looking for excel button")
         for btn in self.driver.find_elements_by_tag_name('button'):
             if btn.get_attribute('data-automationid') == 'report-toolbar-export-excel-menuitem--body':
+                print("Found")
                 return btn
 
         raise KeyError("Couldn't find export button. "
@@ -172,32 +177,42 @@ class WebDriver:
     def update_date_range(self, from_time: Union[str, None], until_time: Union[str, None]):
         # update From field
         if from_time:
+            print("Updating from time")
             from_input_field = self.driver.find_element_by_id("dateFieldFrom-inputEl")
             time.sleep(1)
             from_input_field.send_keys(
                 Keys.BACKSPACE * len(from_input_field.get_attribute("value")))
+            time.sleep(0.5)
 
             from_input_field.send_keys(from_time)
+            time.sleep(0.5)
             # press the update button
+            print("Field updated")
 
         if until_time:
             # update To field
+            print("Updating until time")
             until_input_field = self.driver.find_element_by_id("dateFieldTo-inputEl")
             time.sleep(1)
             # clear the input field
             until_input_field.send_keys(
                 Keys.BACKSPACE * len(until_input_field.get_attribute("value")))
 
+            time.sleep(0.5)
             # input the datetime
             until_input_field.send_keys(until_time)
-
+            print("field updated")
+            time.sleep(2)
             # take the first div that satisfies the condition
+            print("Looking for update button")
             update_btn = next(filter(
                 lambda div: div.get_attribute("data-automationid") == "date-toolbar-update-button",
                 self.driver.find_elements_by_tag_name("div")))
+            print("Found", update_btn)
+            print("Clicking")
             update_btn.click()
-            time.sleep(7)
-            # wait 5 seconds to the report is, hopefully, updated
+            time.sleep(15)
+            # wait 15 seconds to the report is, hopefully, updated
 
 def glob_excels(excel_dir):
     return list(Path(excel_dir).glob("*.xls*"))
