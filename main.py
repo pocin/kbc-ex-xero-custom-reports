@@ -121,7 +121,8 @@ class WebDriver:
             report_id,
             account_id,
             from_date=None,
-            to_date=None):
+            to_date=None,
+            delay_seconds=15):
         """
         """
 
@@ -136,7 +137,7 @@ class WebDriver:
               "to_date", to_date)
         self.driver.get(report_download_template)
         self.enable_download_in_headless_chrome()
-        self.update_date_range(from_date, to_date)
+        self.update_date_range(from_date, to_date, delay_seconds)
 
         # click export btn so that excel btn is rendered
         export_btn = self._locate_export_button()
@@ -154,6 +155,7 @@ class WebDriver:
                 time.sleep(3)
             else:
                 print("Report downloaded to ", report_path)
+                time.sleep(3)
                 break
 
     def _locate_export_button(self):
@@ -174,7 +176,10 @@ class WebDriver:
         raise KeyError("Couldn't find export button. "
                        "The underlying html/css probably changed and the code needs to be adjusted")
 
-    def update_date_range(self, from_time: Union[str, None], until_time: Union[str, None]):
+    def update_date_range(self,
+                          from_time: Union[str, None],
+                          until_time: Union[str, None],
+                          delay_seconds: int=15):
         # update From field
         if from_time:
             print("Updating from time")
@@ -211,8 +216,11 @@ class WebDriver:
             print("Found", update_btn)
             print("Clicking")
             update_btn.click()
-            time.sleep(15)
-            # wait 15 seconds to the report is, hopefully, updated
+            # wait 15 seconds to the report is, hopefully, updated we can't really
+            # use explicit waits baked into selenium because the buttons do not
+            # have unique ids
+            print("Waiting for {} seconds after updating the date range".format(delay_seconds))
+            time.sleep(delay_seconds)
 
 def glob_excels(excel_dir):
     return list(Path(excel_dir).glob("*.xls*"))
@@ -265,11 +273,13 @@ def main(params, datadir='/data/'):
                 print("Downloading report", report)
                 from_date = robotize_date(report.get("from_date", None))
                 to_date = robotize_date(report.get("to_date", None))
+                delay_seconds = report.get("delay_seconds", 15)
                 try:
                     wd.download_report(report['report_id'],
                                        account_id=account_id,
                                        from_date=from_date,
-                                       to_date=to_date)
+                                       to_date=to_date,
+                                       delay_seconds=delay_seconds)
                 except Exception:
                     sc_path = '/tmp/xero_custom_report_latest_exception.png'
                     print("Saved screenshot to", sc_path)

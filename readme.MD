@@ -24,11 +24,22 @@ to download reports
       "report_id": 12345,
       "filename":  "friendly_name_less_than_64_chars",
       "from_date": "last month",
-      "to_date": "today"
+      "to_date": "today",
+      "delay_seconds": 15,
     }
   ]
 }
 ```
+
+the optional `delay_seconds` parameter controls how long to wait after updating the date range. If the report large and you get errors like 
+```
+selenium.common.exceptions.InvalidElementStateException: Message: invalid element state
+(Session info: headless chrome=70.0.3538.77)
+(Driver info: chromedriver=2.40.565383 (76257d1ab79276b2d53ee976b2c3e3b9f335cde7),platform=Linux 4.9.32-15.41.amzn1.x86_64 x86_64)
+```
+
+try increasing the value, 15 seconds should be enough for most cases (the default), but feel free to experiment.
+
 
 ## Date ranges
 Choose 
