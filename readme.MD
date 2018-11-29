@@ -78,6 +78,15 @@ Get account_id by logging in to the UI, clicking reports and copying it from the
 ![How to get account_id from xero ui](./media/xero_account_id_ui.png)
 
 Excels are converted to csv and uploaded to keboola with with [\u0001](https://www.fileformat.info/info/unicode/char/0001/index.htm) delimiter so that all columns are squashed into one called "data"
+# Development
+```
+$ mkdir data
+$ # make a file #data/config.json
+$ docker-compose build dev
+$ docker-compose run --rm dev bash
+$ python3 main.py
+$ #check  /tmp folder in container for screenshots
+```
 
 # License
 This project is licensed under [GLWTPL](https://github.com/me-shaon/GLWTPL/blob/master/LICENSE) License
