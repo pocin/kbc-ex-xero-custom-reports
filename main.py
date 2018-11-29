@@ -137,6 +137,8 @@ class WebDriver:
               "to_date", to_date)
         self.driver.get(report_download_template)
         self.enable_download_in_headless_chrome()
+        print("Waiting for page to load")
+        time.sleep(3)
         self.update_date_range(from_date, to_date, delay_seconds)
 
         # click export btn so that excel btn is rendered
@@ -184,13 +186,13 @@ class WebDriver:
         if from_time:
             print("Updating from time")
             from_input_field = self.driver.find_element_by_id("dateFieldFrom-inputEl")
-            time.sleep(1)
+            print("Found input field", from_input_field)
+            time.sleep(2.5)
             from_input_field.send_keys(
                 Keys.BACKSPACE * len(from_input_field.get_attribute("value")))
-            time.sleep(0.5)
+            time.sleep(2.5)
 
             from_input_field.send_keys(from_time)
-            time.sleep(0.5)
             # press the update button
             print("Field updated")
 
@@ -198,16 +200,16 @@ class WebDriver:
             # update To field
             print("Updating until time")
             until_input_field = self.driver.find_element_by_id("dateFieldTo-inputEl")
-            time.sleep(1)
+            time.sleep(2.5)
             # clear the input field
             until_input_field.send_keys(
                 Keys.BACKSPACE * len(until_input_field.get_attribute("value")))
 
-            time.sleep(0.5)
+            time.sleep(2.5)
             # input the datetime
             until_input_field.send_keys(until_time)
             print("field updated")
-            time.sleep(2)
+            time.sleep(2.5)
             # take the first div that satisfies the condition
             print("Looking for update button")
             update_btn = next(filter(
