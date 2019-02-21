@@ -118,41 +118,60 @@ class WebDriver:
 
     def download_report(
             self,
-            report_id=None,
-            account_id=None,
+            report_id,
+            account_id,
             from_date=None,
             to_date=None,
-            delay_seconds=15,
-            action = "download_reports",
-            url = None):
+            delay_seconds=15):
         """
         """
+    
+        # the first string after xero.com/ is the account id
+        report_download_template = (
+            "https://reporting.xero.com/"
+            "{account_id}/v1/Run/"
+            "{report_id}?isCustom=True").format(account_id=account_id, report_id=report_id)
 
-        if action == "download_reports":
-            
-            # the first string after xero.com/ is the account id
-            report_download_template = (
-                "https://reporting.xero.com/"
-                "{account_id}/v1/Run/"
-                "{report_id}?isCustom=True").format(account_id=account_id, report_id=report_id)
-    
-            print("getting report from ", report_download_template,
-                  "from_date", from_date,
-                  "to_date", to_date)
-            self.driver.get(report_download_template)
+        print("getting report from ", report_download_template,
+              "from_date", from_date,
+              "to_date", to_date)
+        self.driver.get(report_download_template)
+        self.enable_download_in_headless_chrome()
+        print("Waiting for page to load")
+        time.sleep(3)
+        self.update_date_range(from_date, to_date, delay_seconds)
+
+        # click export btn so that excel btn is rendered
+        export_btn = self._locate_export_button()
+        export_btn.click()
+        time.sleep(1)
+
+        excel_btn = self._locate_export_to_excel_button()
+        excel_btn.click()
+        # the sleeps are experimental and it might happen that the file won't be downloaded
+        time.sleep(3)
+        while True:
+            report_path = glob_excels(self.download_dir)
+            if not report_path:
+                print("Waiting for the report to be downloaded")
+                time.sleep(3)
+            else:
+                print("Report downloaded to ", report_path)
+                time.sleep(3)
+                break
+                    
+                    
+    def direct_url(self,
+                   url = None):
+        
+        if url == None:
+            raise ValueError("No URL provided.")
+        else:
+            print("Getting report from ", url)
+            self.driver.get(url)
             self.enable_download_in_headless_chrome()
+            self.driver.get(url.replace("Report.aspx?", "ExcelReport.aspx?", 1))
             print("Waiting for page to load")
-            time.sleep(3)
-            self.update_date_range(from_date, to_date, delay_seconds)
-    
-            # click export btn so that excel btn is rendered
-            export_btn = self._locate_export_button()
-            export_btn.click()
-            time.sleep(1)
-    
-            excel_btn = self._locate_export_to_excel_button()
-            excel_btn.click()
-            # the sleeps are experimental and it might happen that the file won't be downloaded
             time.sleep(3)
             while True:
                 report_path = glob_excels(self.download_dir)
@@ -163,26 +182,6 @@ class WebDriver:
                     print("Report downloaded to ", report_path)
                     time.sleep(3)
                     break
-        
-        elif action == "direct_url":
-            if url == None:
-                raise ValueError("No URL provided.")
-            else:
-                print("Getting report from ", url)
-                self.driver.get(url)
-                self.enable_download_in_headless_chrome()
-                self.driver.get(url.replace("Report.aspx?", "ExcelReport.aspx?", 1))
-                print("Waiting for page to load")
-                time.sleep(3)
-                while True:
-                    report_path = glob_excels(self.download_dir)
-                    if not report_path:
-                        print("Waiting for the report to be downloaded")
-                        time.sleep(3)
-                    else:
-                        print("Report downloaded to ", report_path)
-                        time.sleep(3)
-                        break
 
     def _locate_export_button(self):
         print("Looking for export button")
@@ -284,12 +283,11 @@ def main(params, datadir='/data/'):
 
     wd = WebDriver(headless=True, download_dir=download_dir)
     action = params['action']
-#    account_id = params['account_id']
     if action == 'list_reports':
         print("Listing available reports")
         with wd:
             wd.login(params['username'], params['#password'])
-            reports = wd.list_reports(params['account_id'])
+            reports = wd.list_reports(account_id)
             print(json.dumps(reports, indent=2))
     elif action == 'download_reports':
         print("downloading reports")
@@ -307,7 +305,7 @@ def main(params, datadir='/data/'):
                                        to_date=to_date,
                                        delay_seconds=delay_seconds)
                 except Exception:
-                    sc_path = '/tmp/xero_custom_report_latest_exception.png'
+                    sc_path = '/tmp/xero_custom_reports_latest_exception.png'
                     print("Saved screenshot to", sc_path)
                     wd.driver.save_screenshot(sc_path)
                     raise
@@ -318,10 +316,9 @@ def main(params, datadir='/data/'):
         with wd:
             wd.login(params['username'], params['#password'])
             try:
-                wd.download_report(action = action,
-                                   url = params['direct_url'])
+                wd.direct_url(url = params['direct_url'])
             except Exception:
-                sc_path = '/tmp/xero_custom_report_latest_exception.png'
+                sc_path = '/tmp/xero_custom_reports_latest_exception.png'
                 print("Saved screenshot to", sc_path)
                 wd.driver.save_screenshot(sc_path)
                 raise
