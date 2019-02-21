@@ -31,6 +31,17 @@ to download reports
 }
 ```
 
+to use direct url for base reports (not custom!)
+```javascript
+{
+	"username": "foo@bar.com",
+	"#password": "secret",
+	"account_id": "!abc12"
+	"action": "direct_url",
+	"direct_url": "https://go.xero.com/Reports/Report.aspx?reportId=abcdef-[truncated]&statement=123456-[truncated]&reportClass=ProfitAndLoss"
+}
+```
+
 the optional `delay_seconds` parameter controls how long to wait after updating the date range. If the report large and you get errors like 
 ```
 selenium.common.exceptions.InvalidElementStateException: Message: invalid element state

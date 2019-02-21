@@ -162,22 +162,36 @@ class WebDriver:
                     
                     
     def direct_url(self,
+                   account_id,
                    url = None):
         
         if url == None:
             raise ValueError("No URL provided.")
         else:
-            print("Getting report from ", url)
-            self.driver.get(url)
-            self.enable_download_in_headless_chrome()
-            self.driver.get(url.replace("Report.aspx?", "ExcelReport.aspx?", 1))
+            explicit_company_url = (
+                    "https://reporting.xero.com/"
+                    "{account_id}/summary").format(account_id=account_id)
+            print("Localise company ", explicit_company_url)
+            self.driver.get(explicit_company_url)
             print("Waiting for page to load")
             time.sleep(3)
+            print("Getting report from ", url,
+                  " for company: ", account_id)
+            self.driver.get(url)
+            print("Waiting for page to load")
+            time.sleep(3)
+            self.enable_download_in_headless_chrome()
+            self.driver.get(url.replace("Report.aspx?", "ExcelReport.aspx?", 1))
+            time.sleep(3)
+            count = 0 #for debug
             while True:
                 report_path = glob_excels(self.download_dir)
-                if not report_path:
+                if count > 10: #for debug
+                    raise ValueError("Looping too many times") #for debug
+                elif not report_path:
                     print("Waiting for the report to be downloaded")
                     time.sleep(3)
+                    count += 1
                 else:
                     print("Report downloaded to ", report_path)
                     time.sleep(3)
@@ -280,8 +294,10 @@ def convert_excel(excel_dir, path_out):
 def main(params, datadir='/data/'):
     download_dir = '/tmp/xero_custom_reports_foo/'
     outdir = Path(datadir) / 'out/tables/'
-
+    
+    
     wd = WebDriver(headless=True, download_dir=download_dir)
+    account_id = params['account_id']
     action = params['action']
     if action == 'list_reports':
         print("Listing available reports")
@@ -300,7 +316,7 @@ def main(params, datadir='/data/'):
                 delay_seconds = report.get("delay_seconds", 15)
                 try:
                     wd.download_report(report_id = report['report_id'],
-                                       account_id=params['account_id'],
+                                       account_id=account_id,
                                        from_date=from_date,
                                        to_date=to_date,
                                        delay_seconds=delay_seconds)
@@ -316,7 +332,8 @@ def main(params, datadir='/data/'):
         with wd:
             wd.login(params['username'], params['#password'])
             try:
-                wd.direct_url(url = params['direct_url'])
+                wd.direct_url(account_id=account_id,
+                              url = params['direct_url'])
             except Exception:
                 sc_path = '/tmp/xero_custom_reports_latest_exception.png'
                 print("Saved screenshot to", sc_path)
